@@ -1,0 +1,2 @@
+[database]
+database_url = "postgres://postgres:password@localhorst/tiersortierer"
