@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use std::time::Duration;
+use actix_web::{HttpServer, web, App};
 use sqlx::postgres::PgPoolOptions;
 use crate::config::Config;
 
@@ -23,6 +24,20 @@ async fn main() -> Result<(), Error> {
 	// Without giving it arguments it will default to $PROJECT_ROOT/migrations
 	sqlx::migrate!()
 		.run(&pool)
+		.await?;
+
+	let pool_data = web::Data::new(pool);
+
+	log::info!("Starting actix server");
+	HttpServer::new(move || {
+		// let json_config = web::JsonConfig::default()
+		// 	.limit(4096);
+
+		App::new()
+			.app_data(pool_data.clone())
+	})
+		.bind("127.0.0.1:8080")?
+		.run()
 		.await?;
 
 	Ok(())
