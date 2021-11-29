@@ -9,7 +9,9 @@ type Error = Box<dyn std::error::Error + Send + Sync>;
 
 #[actix_web::main]
 async fn main() -> Result<(), Error> {
-	let config = Arc::new(Config::new()?);
+	let config = Arc::new(
+		Config::new().expect("Config file not found.")
+	);
 
 	let pool = PgPoolOptions::new()
 		.max_lifetime(Duration::from_secs(6000))
