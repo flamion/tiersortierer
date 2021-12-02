@@ -5,6 +5,7 @@ use log::LevelFilter;
 use simple_logger::SimpleLogger;
 use sqlx::postgres::PgPoolOptions;
 use crate::config::Config;
+use crate::endpoints::user::create_user;
 
 mod config;
 mod model;
@@ -52,6 +53,9 @@ async fn main() -> Result<(), Error> {
 
 		App::new()
 			.app_data(pool_data.clone())
+			.service(web::scope("/user")
+				.service(create_user)
+			)
 	})
 		.bind("127.0.0.1:8080")?
 		.run()

@@ -3,7 +3,7 @@ use sqlx::{Pool, Postgres};
 use crate::model::user::{NewUser, User};
 use crate::util::password_matches_requirements;
 
-#[post("/")]
+#[post("")]
 pub async fn create_user(new_user: web::Json<NewUser>, db_pool: web::Data<Pool<Postgres>>) -> Result<impl Responder, Box<dyn std::error::Error>> {
 	if User::username_exists(new_user.username.as_str(), &db_pool).await? {
 		return Ok(HttpResponse::Conflict().finish());

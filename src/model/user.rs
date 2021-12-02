@@ -5,6 +5,7 @@ use crate::util::{get_password_hash, time_now};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+// TODO sanitize username to remove spaces, make it lowercase etc.
 pub struct NewUser {
 	pub username: String,
 	pub password: String,
@@ -52,7 +53,7 @@ impl User {
 	}
 
 	/// Takes a user ID and retrieves the corresponding User from the Database
-	pub async fn user_from_id(user_id: i64, pool: &Pool<Postgres>) -> Result<User, Box<dyn std::error::Error>> {
+	pub async fn from_id(user_id: i64, pool: &Pool<Postgres>) -> Result<User, Box<dyn std::error::Error>> {
 		let user = sqlx::query_as(r#"SELECT * FROM users WHERE user_id = $1"#)
 			.bind(user_id)
 			.fetch_one(pool)
