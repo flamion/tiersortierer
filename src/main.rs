@@ -7,6 +7,9 @@ use sqlx::postgres::PgPoolOptions;
 use crate::config::Config;
 
 mod config;
+mod model;
+mod endpoints;
+mod util;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 
