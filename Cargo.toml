@@ -16,5 +16,6 @@ log = "0.4.14"
 simple_logger = "1.11.0"
 argon2 = { version = "0.3.1" }
 
-[profile.release]
+[profile.production]
+inherits = "release"
 lto = true
