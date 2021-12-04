@@ -1,0 +1,59 @@
+{
+  "db": "PostgreSQL",
+  "2ec92342ae0c2ec65d17ff3dbc6a00d0f1c4f901aa683f3afce56cc31ee5e945": {
+    "query": "\n\t\t\tINSERT INTO users(username, password, email_address, creation_time, last_login_time)\n\t\t\tVALUES ($1, $2, $3, $4, $5)\n\t\t\tRETURNING user_id AS new_id\n\t\t\t",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "new_id",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "a326d091b84bc4d8ee90f6a5c3d1d5c608f52b2b72d547f93c71945e169667d0": {
+    "query": "SELECT user_id FROM users WHERE user_id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "dfa520877c017cd5808d02c24ef2d71938b68093974f335a4d89df91874fdaa2": {
+    "query": "DELETE FROM users WHERE user_id = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": []
+    }
+  }
+}
