@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use sqlx::{Executor, FromRow, Pool, Postgres, Row};
+use sqlx::{FromRow, Pool, Postgres, Row};
 use sqlx::postgres::PgRow;
 use crate::util::{get_password_hash, time_now};
 
@@ -98,6 +98,8 @@ impl User {
 	}
 }
 
+// impl for query_as.
+// A custom impl is needed as the password, which is saved in the db, is not present in the user struct.
 impl FromRow<'_, PgRow> for User {
 	fn from_row(row: &PgRow) -> Result<Self, sqlx::Error> {
 		let user_id = row.try_get("user_id")?;
@@ -116,3 +118,5 @@ impl FromRow<'_, PgRow> for User {
 		})
 	}
 }
+
+
