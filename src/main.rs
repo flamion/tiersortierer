@@ -1,9 +1,11 @@
 use std::sync::Arc;
 use std::time::Duration;
-use actix_web::{HttpServer, web, App};
+
+use actix_web::{App, HttpServer, web};
 use log::LevelFilter;
 use simple_logger::SimpleLogger;
 use sqlx::postgres::PgPoolOptions;
+
 use crate::config::Config;
 use crate::endpoints::user::{create_user, get_user};
 

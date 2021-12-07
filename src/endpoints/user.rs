@@ -1,7 +1,7 @@
 use actix_web::{get, HttpResponse, post, Responder, web};
 use sqlx::{Pool, Postgres};
-use crate::model::token::Token;
 
+use crate::model::token::Token;
 use crate::model::user::{NewUser, User};
 use crate::util::password_matches_requirements;
 

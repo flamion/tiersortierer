@@ -1,6 +1,7 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Pool, Postgres, Row};
 use sqlx::postgres::PgRow;
+
 use crate::util::{get_password_hash, time_now};
 
 #[derive(Serialize, Deserialize)]

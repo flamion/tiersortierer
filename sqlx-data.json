@@ -24,6 +24,20 @@
       ]
     }
   },
+  "646b7bbc43c38cc838a0e57498b00502643fbebe85a2e5e355279de2b3228c6b": {
+    "query": "INSERT INTO tokens(user_id, token, creation_time) VALUES ($1, $2, $3)",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Text",
+          "Int8"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "a326d091b84bc4d8ee90f6a5c3d1d5c608f52b2b72d547f93c71945e169667d0": {
     "query": "SELECT user_id FROM users WHERE user_id = $1",
     "describe": {

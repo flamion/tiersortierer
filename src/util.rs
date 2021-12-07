@@ -1,9 +1,11 @@
 use std::time::{SystemTime, UNIX_EPOCH};
-use actix_web::http::HeaderValue;
 
+use actix_web::http::HeaderValue;
 use argon2::{Argon2, PasswordHasher};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
+use rand::RngCore;
+
 use crate::model::token::TokenError;
 
 pub fn get_password_hash(password: &str) -> String {
@@ -27,13 +29,20 @@ pub fn time_now() -> i64 {
 
 pub fn get_token_from_header(token_header: Option<&HeaderValue>) -> Result<String, TokenError> {
 	let token = match token_header {
-		None => { return Err(TokenError::TokenUnauthorized) }
+		None => { return Err(TokenError::TokenUnauthorized); }
 		Some(token_header) => { token_header.to_str() }
 	};
 	let token = match token {
 		Ok(token) => { token }
-		Err(_) => { return Err(TokenError::BadTokenFormat) }
+		Err(_) => { return Err(TokenError::BadTokenFormat); }
 	};
 
 	Ok(String::from(token))
+}
+
+pub fn generate_token() -> String {
+	let mut random_bytes: [u8; 36] = [0; 36];
+	rand::thread_rng().fill_bytes(&mut random_bytes);
+
+	base64::encode_config(&random_bytes, base64::URL_SAFE)
 }
