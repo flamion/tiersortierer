@@ -1,13 +1,14 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use actix_web::http::StatusCode;
+
 use actix_web::{HttpResponse, HttpResponseBuilder, ResponseError};
+use actix_web::http::StatusCode;
 use argon2::{PasswordHash, PasswordVerifier};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Pool, Postgres, Row};
 use sqlx::postgres::PgRow;
-use crate::model::token::Token;
 
+use crate::model::token::Token;
 use crate::util::{get_password_hash, time_now};
 
 #[derive(Serialize, Deserialize)]
@@ -51,20 +52,24 @@ impl LoginUser {
 			"SELECT user_id, password FROM users WHERE LOWER(username) = LOWER($1)",
 			self.username,
 		)
-			.fetch_one(db_pool)
+			.fetch_optional(db_pool)
 			.await?;
 
-		let user_id = query.user_id;
-		let user = User::from_id(user_id, db_pool).await?;
+		if let Some(query) = query {
+			let user_id = query.user_id;
+			let user = User::from_id(user_id, db_pool).await?;
 
-		let db_password_hash = query.password;
-		let parsed_hash = PasswordHash::new(db_password_hash.as_str())?;
-		if !argon2::Argon2::default().verify_password(self.password.as_bytes(), &parsed_hash).is_ok() {
-			return Err(LoginError::WrongCredentials)
+			let db_password_hash = query.password;
+			let parsed_hash = PasswordHash::new(db_password_hash.as_str())?;
+			if !argon2::Argon2::default().verify_password(self.password.as_bytes(), &parsed_hash).is_ok() {
+				return Err(LoginError::WrongCredentials);
+			}
+
+
+			Ok(Token::new(&user, db_pool).await?)
+		} else {
+			Err(LoginError::WrongCredentials)
 		}
-
-
-		Ok(Token::new(&user, db_pool).await?)
 	}
 }
 
