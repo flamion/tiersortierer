@@ -7,6 +7,7 @@ use crate::Error;
 
 #[derive(Deserialize)]
 pub struct Config {
+	#[serde(default = "general_default")]
 	pub general: General,
 	pub database: Database,
 }
@@ -36,4 +37,10 @@ impl Config {
 const fn token_valid_duration_default() -> i64 {
 	//millis (one second) * 60 for 1 minute * 60 for 1 hour * 24 for 1 day * 7 for one week * 2 for 2 weeks
 	1000 * 60 * 60 * 24 * 7 * 2
+}
+
+const fn general_default() -> General {
+	General {
+		token_valid_duration: token_valid_duration_default(),
+	}
 }

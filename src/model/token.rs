@@ -57,18 +57,18 @@ impl From<sqlx::Error> for TokenError {
 
 pub struct Token {
 	pub user_id: i64,
-	pub token: String,
+	pub is_admin: bool,
 	pub creation_time: i64,
 }
 
 impl Token {
-	pub async fn new(user_id: i64, pool: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
+	pub async fn new(user: &User, pool: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
 		let token = generate_token();
 		let creation_time = time_now();
 
 		let _ = sqlx::query!(
 			r#"INSERT INTO tokens(user_id, token, creation_time) VALUES ($1, $2, $3)"#,
-			user_id,
+			user.user_id,
 			token,
 			creation_time
 		)
@@ -77,8 +77,8 @@ impl Token {
 
 
 		Ok(Token {
-			user_id,
-			token,
+			user_id: user.user_id,
+			is_admin: user.is_admin,
 			creation_time,
 		})
 	}
@@ -88,15 +88,18 @@ impl Token {
 	}
 
 	pub async fn from_str(token: &str, db_pool: &Pool<Postgres>, config: &Config) -> Result<Self, TokenError> {
-		let query: Option<Token> = sqlx::query_as("SELECT * FROM tokens WHERE token = $1")
+		let query: Option<Token> = sqlx::query_as(
+			"SELECT t.creation_time AS creation_time, \
+			t.user_id AS user_id, u.is_admin AS is_admin \
+			FROM tokens t \
+			INNER JOIN users u ON t.user_id = u.user_id AND t.token = $1;"
+		)
 			.bind(token)
 			.fetch_optional(db_pool)
 			.await?;
 
 		return if let Some(token) = query {
-			let time_now = time_now();
-
-			if (time_now - token.creation_time) > config.general.token_valid_duration {
+			if token.is_invalid(&config) {
 				return Err(TokenError::TokenUnauthorized);
 			}
 
@@ -105,18 +108,25 @@ impl Token {
 			Err(TokenError::TokenUnauthorized)
 		};
 	}
+
+	#[inline(always)]
+	pub fn is_invalid(&self, config: &Config) -> bool {
+		let time_now = time_now();
+
+		(time_now - self.creation_time) > config.general.token_valid_duration
+	}
 }
 
 impl FromRow<'_, PgRow> for Token {
 	fn from_row(row: &'_ PgRow) -> Result<Self, sqlx::Error> {
 		let user_id = row.try_get("user_id")?;
-		let token = row.try_get("token")?;
+		let is_admin = row.try_get("is_admin")?;
 		let creation_time = row.try_get("creation_time")?;
 
 
 		Ok(Self {
 			user_id,
-			token,
+			is_admin,
 			creation_time,
 		})
 	}

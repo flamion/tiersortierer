@@ -21,6 +21,7 @@ pub struct User {
 	pub email_address: Option<String>,
 	pub creation_date: i64,
 	pub last_login_date: i64,
+	pub is_admin: bool,
 }
 
 impl User {
@@ -30,8 +31,8 @@ impl User {
 
 		let created_user = sqlx::query!(
 			r#"
-			INSERT INTO users(username, password, email_address, creation_time, last_login_time)
-			VALUES ($1, $2, $3, $4, $5)
+			INSERT INTO users(username, password, email_address, creation_time, last_login_time, is_admin)
+			VALUES ($1, $2, $3, $4, $5, $6)
 			RETURNING user_id AS new_id
 			"#,
 			new_user.username.to_lowercase(),
@@ -39,6 +40,7 @@ impl User {
 			new_user.email_address,
 			now,
 			now,
+			false
 		)
 			.fetch_one(pool)
 			.await?;
@@ -50,6 +52,7 @@ impl User {
 			email_address: new_user.email_address.clone(),
 			creation_date: now,
 			last_login_date: now,
+			is_admin: false,
 		})
 	}
 
@@ -108,6 +111,7 @@ impl FromRow<'_, PgRow> for User {
 		let email_address = row.try_get("email_address")?;
 		let creation_date = row.try_get("create_date")?;
 		let last_login_date = row.try_get("last_login_date")?;
+		let is_admin = row.try_get("is_admin")?;
 
 
 		Ok(Self {
@@ -116,6 +120,7 @@ impl FromRow<'_, PgRow> for User {
 			email_address,
 			last_login_date,
 			creation_date,
+			is_admin,
 		})
 	}
 }
