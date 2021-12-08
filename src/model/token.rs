@@ -6,6 +6,7 @@ use std::pin::Pin;
 use actix_web::{FromRequest, HttpRequest, HttpResponse, HttpResponseBuilder, ResponseError, web};
 use actix_web::dev::Payload;
 use actix_web::http::StatusCode;
+use serde::Serialize;
 use sqlx::{FromRow, Pool, Postgres, Row};
 use sqlx::postgres::PgRow;
 
@@ -14,49 +15,17 @@ use crate::model::user::User;
 use crate::util::{generate_token, get_token_from_header, time_now};
 
 // Maybe completely replace TokenError with a custom crate error
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum TokenError {
 	BadTokenFormat = 400,
 	TokenUnauthorized = 401,
 	InternalServerError = 500,
 }
 
-impl Display for TokenError {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}", match self {
-			TokenError::BadTokenFormat => "Bad Token",
-			TokenError::TokenUnauthorized => "Unauthorized",
-			TokenError::InternalServerError => "Internal Server Error",
-		})
-	}
-}
-
-impl Error for TokenError {}
-
-impl ResponseError for TokenError {
-	fn status_code(&self) -> StatusCode {
-		match self {
-			TokenError::BadTokenFormat => StatusCode::BAD_REQUEST,
-			TokenError::TokenUnauthorized => StatusCode::UNAUTHORIZED,
-			TokenError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
-		}
-	}
-
-	fn error_response(&self) -> HttpResponse {
-		HttpResponseBuilder::new(self.status_code())
-			.body(self.to_string())
-	}
-}
-
-impl From<sqlx::Error> for TokenError {
-	fn from(err: sqlx::Error) -> Self {
-		log::error!("{:?}", err);
-		TokenError::InternalServerError
-	}
-}
-
+#[derive(Serialize)]
 pub struct Token {
 	pub user_id: i64,
+	#[serde(skip_serializing)]
 	pub is_admin: bool,
 	pub creation_time: i64,
 }
@@ -72,7 +41,7 @@ impl Token {
 			token,
 			creation_time
 		)
-			.fetch_one(pool)
+			.execute(pool)
 			.await?;
 
 
@@ -148,5 +117,40 @@ impl FromRequest for Token {
 
 			Ok(token)
 		})
+	}
+}
+
+
+impl Display for TokenError {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", match self {
+			TokenError::BadTokenFormat => "Bad Token",
+			TokenError::TokenUnauthorized => "Unauthorized",
+			TokenError::InternalServerError => "Internal Server Error",
+		})
+	}
+}
+
+impl Error for TokenError {}
+
+impl ResponseError for TokenError {
+	fn status_code(&self) -> StatusCode {
+		match self {
+			TokenError::BadTokenFormat => StatusCode::BAD_REQUEST,
+			TokenError::TokenUnauthorized => StatusCode::UNAUTHORIZED,
+			TokenError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+		}
+	}
+
+	fn error_response(&self) -> HttpResponse {
+		HttpResponseBuilder::new(self.status_code())
+			.body(self.to_string())
+	}
+}
+
+impl From<sqlx::Error> for TokenError {
+	fn from(err: sqlx::Error) -> Self {
+		log::error!("{:?}", err);
+		TokenError::InternalServerError
 	}
 }

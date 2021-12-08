@@ -7,7 +7,7 @@ use simple_logger::SimpleLogger;
 use sqlx::postgres::PgPoolOptions;
 
 use crate::config::Config;
-use crate::endpoints::user::{create_user, get_user};
+use crate::endpoints::user::{create_user, get_user, login};
 
 mod config;
 mod model;
@@ -58,6 +58,7 @@ async fn main() -> Result<(), Error> {
 			.service(web::scope("/user")
 				.service(create_user)
 				.service(get_user)
+				.service(login)
 			)
 	})
 		.bind("127.0.0.1:8080")?

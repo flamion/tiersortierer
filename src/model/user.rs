@@ -1,6 +1,12 @@
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+use actix_web::http::StatusCode;
+use actix_web::{HttpResponse, HttpResponseBuilder, ResponseError};
+use argon2::{PasswordHash, PasswordVerifier};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Pool, Postgres, Row};
 use sqlx::postgres::PgRow;
+use crate::model::token::Token;
 
 use crate::util::{get_password_hash, time_now};
 
@@ -15,16 +21,56 @@ pub struct NewUser {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct LoginUser {
+	pub username: String,
+	pub password: String,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct User {
 	pub user_id: i64,
 	pub username: String,
 	pub email_address: Option<String>,
-	pub creation_date: i64,
-	pub last_login_date: i64,
+	pub creation_time: i64,
+	pub last_login_time: i64,
 	pub is_admin: bool,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum LoginError {
+	WrongCredentials = 401,
+	InternalServerError = 500,
+}
+
+impl LoginUser {
+	/// Verifies the given credentials and creates a new `Token`, returning the struct of the newly
+	/// created `Token`.
+	pub async fn login(&self, db_pool: &Pool<Postgres>) -> Result<Token, LoginError> {
+		let query = sqlx::query!(
+			"SELECT user_id, password FROM users WHERE LOWER(username) = LOWER($1)",
+			self.username,
+		)
+			.fetch_one(db_pool)
+			.await?;
+
+		let user_id = query.user_id;
+		let user = User::from_id(user_id, db_pool).await?;
+
+		let db_password_hash = query.password;
+		let parsed_hash = PasswordHash::new(db_password_hash.as_str())?;
+		if !argon2::Argon2::default().verify_password(self.password.as_bytes(), &parsed_hash).is_ok() {
+			return Err(LoginError::WrongCredentials)
+		}
+
+
+		Ok(Token::new(&user, db_pool).await?)
+	}
+}
+
 impl User {
+	/// Creates a new user and puts the details in the database. Also returns the struct of the
+	/// newly created user.
 	pub async fn new(new_user: &NewUser, pool: &Pool<Postgres>) -> Result<Self, Box<dyn std::error::Error>> {
 		let password_hash = get_password_hash(new_user.password.as_str());
 		let now = time_now();
@@ -50,8 +96,8 @@ impl User {
 			user_id: created_user.new_id,
 			username: new_user.username.to_lowercase(),
 			email_address: new_user.email_address.clone(),
-			creation_date: now,
-			last_login_date: now,
+			creation_time: now,
+			last_login_time: now,
 			is_admin: false,
 		})
 	}
@@ -62,6 +108,8 @@ impl User {
 			.bind(user_id)
 			.fetch_one(pool)
 			.await?;
+
+
 		Ok(user)
 	}
 
@@ -109,8 +157,8 @@ impl FromRow<'_, PgRow> for User {
 		let user_id = row.try_get("user_id")?;
 		let username = row.try_get("username")?;
 		let email_address = row.try_get("email_address")?;
-		let creation_date = row.try_get("create_date")?;
-		let last_login_date = row.try_get("last_login_date")?;
+		let creation_time = row.try_get("creation_time")?;
+		let last_login_time = row.try_get("last_login_time")?;
 		let is_admin = row.try_get("is_admin")?;
 
 
@@ -118,11 +166,57 @@ impl FromRow<'_, PgRow> for User {
 			user_id,
 			username,
 			email_address,
-			last_login_date,
-			creation_date,
+			last_login_time,
+			creation_time,
 			is_admin,
 		})
 	}
 }
 
+impl Display for LoginError {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", match self {
+			LoginError::WrongCredentials => "Incorrect Credentials Provided",
+			LoginError::InternalServerError => "Internal Server Error",
+		})
+	}
+}
 
+impl Error for LoginError {}
+
+
+// This can probably be done better...
+impl From<sqlx::Error> for LoginError {
+	fn from(error: sqlx::Error) -> Self {
+		log::error!("{:?}", error);
+		LoginError::InternalServerError
+	}
+}
+
+impl From<Box<dyn std::error::Error>> for LoginError {
+	fn from(error: Box<dyn Error>) -> Self {
+		log::error!("{}", error);
+		LoginError::InternalServerError
+	}
+}
+
+impl From<argon2::password_hash::Error> for LoginError {
+	fn from(error: argon2::password_hash::Error) -> Self {
+		log::error!("{}", error);
+		LoginError::InternalServerError
+	}
+}
+
+impl ResponseError for LoginError {
+	fn status_code(&self) -> StatusCode {
+		match self {
+			LoginError::WrongCredentials => StatusCode::UNAUTHORIZED,
+			LoginError::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+		}
+	}
+
+	fn error_response(&self) -> HttpResponse {
+		HttpResponseBuilder::new(self.status_code())
+			.body(self.to_string())
+	}
+}
