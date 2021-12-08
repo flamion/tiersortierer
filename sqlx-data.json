@@ -1,7 +1,7 @@
 {
   "db": "PostgreSQL",
-  "2ec92342ae0c2ec65d17ff3dbc6a00d0f1c4f901aa683f3afce56cc31ee5e945": {
-    "query": "\n\t\t\tINSERT INTO users(username, password, email_address, creation_time, last_login_time)\n\t\t\tVALUES ($1, $2, $3, $4, $5)\n\t\t\tRETURNING user_id AS new_id\n\t\t\t",
+  "0ef16004d15b38eac45dacbc5d276497a751367ab7406d749af2be1aa02bdc72": {
+    "query": "\n\t\t\tINSERT INTO users(username, password, email_address, creation_time, last_login_time, is_admin)\n\t\t\tVALUES ($1, $2, $3, $4, $5, $6)\n\t\t\tRETURNING user_id AS new_id\n\t\t\t",
     "describe": {
       "columns": [
         {
@@ -16,7 +16,8 @@
           "Text",
           "Text",
           "Int8",
-          "Int8"
+          "Int8",
+          "Bool"
         ]
       },
       "nullable": [
