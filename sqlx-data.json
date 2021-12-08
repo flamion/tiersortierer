@@ -59,6 +59,32 @@
       ]
     }
   },
+  "d825e07b161a5b82944d68366aad73ea03ec9c1fa28d96d0139e5c68b2793dd5": {
+    "query": "SELECT user_id, password FROM users WHERE LOWER(username) = LOWER($1)",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "password",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  },
   "dfa520877c017cd5808d02c24ef2d71938b68093974f335a4d89df91874fdaa2": {
     "query": "DELETE FROM users WHERE user_id = $1",
     "describe": {
