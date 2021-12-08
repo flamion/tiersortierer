@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use std::time::Duration;
 
 use actix_web::{App, HttpServer, web};
@@ -25,9 +24,7 @@ async fn main() -> Result<(), Error> {
 		.unwrap();
 
 	log::info!("Reading config...");
-	let config = Arc::new(
-		Config::new().expect("Config file not found.")
-	);
+	let config = Config::new().expect("Config file not found.");
 	log::info!("Done!");
 
 	log::info!("Connecting to the database...");
@@ -47,6 +44,7 @@ async fn main() -> Result<(), Error> {
 	log::info!("Done!");
 
 	let pool_data = web::Data::new(pool);
+	let config_data = web::Data::new(config);
 
 	log::info!("Starting actix server.");
 	HttpServer::new(move || {
@@ -55,6 +53,7 @@ async fn main() -> Result<(), Error> {
 
 		App::new()
 			.app_data(pool_data.clone())
+			.app_data(config_data.clone())
 			.service(web::scope("/user")
 				.service(create_user)
 				.service(get_user)

@@ -25,12 +25,15 @@ pub enum TokenError {
 #[derive(Serialize)]
 pub struct Token {
 	pub user_id: i64,
+	pub token_string: String,
 	#[serde(skip_serializing)]
 	pub is_admin: bool,
+	#[serde(skip_serializing)]
 	pub creation_time: i64,
 }
 
 impl Token {
+	/// Creates a new token, saves it in the database and returns a struct with information about the token.
 	pub async fn new(user: &User, pool: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
 		let token = generate_token();
 		let creation_time = time_now();
@@ -47,19 +50,22 @@ impl Token {
 
 		Ok(Token {
 			user_id: user.user_id,
+			token_string: token,
 			is_admin: user.is_admin,
 			creation_time,
 		})
 	}
 
+	/// Turns the token into a user struct.
 	pub async fn into_user(self, pool: &Pool<Postgres>) -> Result<User, Box<dyn std::error::Error>> {
 		User::from_id(self.user_id, pool).await
 	}
 
+	/// Retrieves information about a token from the database.
 	pub async fn from_str(token: &str, db_pool: &Pool<Postgres>, config: &Config) -> Result<Self, TokenError> {
 		let query: Option<Token> = sqlx::query_as(
 			"SELECT t.creation_time AS creation_time, \
-			t.user_id AS user_id, u.is_admin AS is_admin \
+			t.user_id AS user_id, t.token AS token, u.is_admin AS is_admin \
 			FROM tokens t \
 			INNER JOIN users u ON t.user_id = u.user_id AND t.token = $1;"
 		)
@@ -78,6 +84,7 @@ impl Token {
 		};
 	}
 
+	/// Checks whether a token is still valid.
 	#[inline(always)]
 	pub fn is_invalid(&self, config: &Config) -> bool {
 		let time_now = time_now();
@@ -89,12 +96,14 @@ impl Token {
 impl FromRow<'_, PgRow> for Token {
 	fn from_row(row: &'_ PgRow) -> Result<Self, sqlx::Error> {
 		let user_id = row.try_get("user_id")?;
+		let token_string = row.try_get("token")?;
 		let is_admin = row.try_get("is_admin")?;
 		let creation_time = row.try_get("creation_time")?;
 
 
 		Ok(Self {
 			user_id,
+			token_string,
 			is_admin,
 			creation_time,
 		})
