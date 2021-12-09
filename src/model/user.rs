@@ -74,7 +74,7 @@ impl LoginUser {
 }
 
 impl User {
-	/// Creates a new user and puts the details in the database. Also returns the struct of the
+	/// Creates a new user and puts the details in the database, returning the struct of the
 	/// newly created user.
 	pub async fn new(new_user: &NewUser, pool: &Pool<Postgres>) -> Result<Self, Box<dyn std::error::Error>> {
 		let password_hash = get_password_hash(new_user.password.as_str());
@@ -107,7 +107,7 @@ impl User {
 		})
 	}
 
-	/// Takes a user ID and retrieves the corresponding User from the Database
+	/// Takes a user ID and retrieves the corresponding User from the Database.
 	pub async fn from_id(user_id: i64, pool: &Pool<Postgres>) -> Result<User, Box<dyn std::error::Error>> {
 		let user = sqlx::query_as(r#"SELECT * FROM users WHERE user_id = $1"#)
 			.bind(user_id)
@@ -118,7 +118,7 @@ impl User {
 		Ok(user)
 	}
 
-	/// Checks the database whether a user with the specified username already exists
+	/// Checks the database whether a user with the specified id already exists.
 	//  If the answer from the db is empty user does not exist.
 	pub async fn id_exists(id: i64, pool: &Pool<Postgres>) -> Result<bool, Box<dyn std::error::Error>> {
 		let user_row = sqlx::query!(r#"SELECT user_id FROM users WHERE user_id = $1"#, id)
@@ -130,7 +130,7 @@ impl User {
 		Ok(!user_row.is_empty())
 	}
 
-	/// Checks the database whether a user with the specified username already exists
+	/// Checks the database whether a user with the specified username already exists.
 	//  If the answer from the db is empty user does not exist.
 	// TODO use query! macro if that works
 	pub async fn username_exists(username: &str, pool: &Pool<Postgres>) -> Result<bool, Box<dyn std::error::Error>> {
