@@ -189,7 +189,6 @@ impl Display for LoginError {
 
 impl Error for LoginError {}
 
-
 // This can probably be done better...
 impl From<sqlx::Error> for LoginError {
 	fn from(error: sqlx::Error) -> Self {
