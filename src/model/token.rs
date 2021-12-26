@@ -22,7 +22,7 @@ pub enum TokenError {
 	InternalServerError = 500,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Token {
 	pub user_id: i64,
 	pub token_string: String,

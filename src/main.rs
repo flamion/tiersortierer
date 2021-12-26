@@ -6,7 +6,9 @@ use simple_logger::SimpleLogger;
 use sqlx::postgres::PgPoolOptions;
 
 use crate::config::Config;
+use crate::endpoints::admin::admin_endpoint_test;
 use crate::endpoints::user::{create_user, get_user, login};
+use crate::model::admin_auth_middleware::AdminAuthenticator;
 
 mod config;
 mod model;
@@ -58,6 +60,10 @@ async fn main() -> Result<(), Error> {
 				.service(create_user)
 				.service(get_user)
 				.service(login)
+			)
+			.service(web::scope("/admin")
+				.wrap(AdminAuthenticator)
+				.service(admin_endpoint_test)
 			)
 	})
 		.bind("127.0.0.1:8080")?
