@@ -23,6 +23,7 @@ pub enum TokenError {
 }
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Token {
 	pub user_id: i64,
 	pub token_string: String,

@@ -17,6 +17,7 @@ pub async fn create_user(new_user: web::Json<NewUser>, db_pool: web::Data<Pool<P
 
 	let new_user = User::new(&*new_user, &db_pool).await?;
 
+
 	Ok(HttpResponse::Created().json(new_user.user_id))
 }
 
