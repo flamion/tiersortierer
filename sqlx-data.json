@@ -1,0 +1,100 @@
+{
+  "db": "PostgreSQL",
+  "0ef16004d15b38eac45dacbc5d276497a751367ab7406d749af2be1aa02bdc72": {
+    "query": "\n\t\t\tINSERT INTO users(username, password, email_address, creation_time, last_login_time, is_admin)\n\t\t\tVALUES ($1, $2, $3, $4, $5, $6)\n\t\t\tRETURNING user_id AS new_id\n\t\t\t",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "new_id",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Int8",
+          "Int8",
+          "Bool"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "646b7bbc43c38cc838a0e57498b00502643fbebe85a2e5e355279de2b3228c6b": {
+    "query": "INSERT INTO tokens(user_id, token, creation_time) VALUES ($1, $2, $3)",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Text",
+          "Int8"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "a326d091b84bc4d8ee90f6a5c3d1d5c608f52b2b72d547f93c71945e169667d0": {
+    "query": "SELECT user_id FROM users WHERE user_id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
+  "d825e07b161a5b82944d68366aad73ea03ec9c1fa28d96d0139e5c68b2793dd5": {
+    "query": "SELECT user_id, password FROM users WHERE LOWER(username) = LOWER($1)",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "password",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  },
+  "dfa520877c017cd5808d02c24ef2d71938b68093974f335a4d89df91874fdaa2": {
+    "query": "DELETE FROM users WHERE user_id = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": []
+    }
+  }
+}

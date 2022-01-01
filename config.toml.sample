@@ -1,0 +1,5 @@
+[general]
+token_valid_duration = 1814400000 #2 weeks in milliseconds
+
+[database]
+database_url = "postgres://postgres:password@localhorst/tiersortierer"
