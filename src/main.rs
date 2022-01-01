@@ -6,7 +6,7 @@ use simple_logger::SimpleLogger;
 use sqlx::postgres::PgPoolOptions;
 
 use crate::config::Config;
-use crate::endpoints::admin::admin_endpoint_test;
+use crate::endpoints::admin::test::admin_endpoint_test;
 use crate::endpoints::user::{create_user, get_user, login};
 use crate::model::admin_auth_middleware::AdminAuthenticator;
 
